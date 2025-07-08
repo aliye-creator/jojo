@@ -2,10 +2,103 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jojo To-Do</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    #addBtn { font-size: 24px; padding: 5px 10px; }
+    #panel { display: none; margin: 20px 0; }
+    #panel input { padding: 5px; margin-right: 5px; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; margin-bottom: 10px; }
+    li span { flex: 1; }
+    li .counter { width: 50px; margin: 0 10px; }
+    li input[type="checkbox"] { margin: 0 5px; }
+  </style>
 </head>
 <body>
-  <h1>سلام Jojo!</h1>
-  <p>اینجا لیست کارهای من قراره باشه :)</p>
+  <header>
+    <h1>Jojo</h1>
+    <button id="addBtn">＋</button>
+  </header>
+
+  <div id="panel">
+    <input type="text" id="taskName" placeholder="نام کار را بنویس" />
+    <button id="okBtn">OK</button>
+    <button id="cancelBtn">لغو</button>
+  </div>
+
+  <ul id="tasks"></ul>
+
+  <script>
+    const addBtn = document.getElementById('addBtn');
+    const panel = document.getElementById('panel');
+    const okBtn = document.getElementById('okBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const taskNameInput = document.getElementById('taskName');
+    const tasksEl = document.getElementById('tasks');
+
+    let tasks = JSON.parse(localStorage.getItem('jojoTasks') || '[]');
+
+    function saveTasks() {
+      localStorage.setItem('jojoTasks', JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      tasksEl.innerHTML = '';
+      tasks.forEach((t, idx) => {
+        const li = document.createElement('li');
+        const span = document.createElement('span');
+        span.textContent = t.name;
+        li.appendChild(span);
+
+        const counter = document.createElement('input');
+        counter.type = 'number';
+        counter.value = t.count || 0;
+        counter.className = 'counter';
+        counter.addEventListener('change', e => {
+          tasks[idx].count = e.target.value;
+          saveTasks();
+        });
+        li.appendChild(counter);
+
+        for (let i = 0; i < 5; i++) {
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = t.checks && t.checks[i];
+          cb.addEventListener('change', e => {
+            tasks[idx].checks = tasks[idx].checks || [];
+            tasks[idx].checks[i] = e.target.checked;
+            saveTasks();
+          });
+          li.appendChild(cb);
+        }
+
+        tasksEl.appendChild(li);
+      });
+    }
+
+    addBtn.addEventListener('click', () => {
+      panel.style.display = 'block';
+      taskNameInput.focus();
+    });
+    cancelBtn.addEventListener('click', () => {
+      panel.style.display = 'none';
+      taskNameInput.value = '';
+    });
+    okBtn.addEventListener('click', () => {
+      const name = taskNameInput.value.trim();
+      if (!name) return;
+      tasks.push({ name, count: 0, checks: [false, false, false, false, false] });
+      saveTasks();
+      renderTasks();
+      taskNameInput.value = '';
+      panel.style.display = 'none';
+    });
+
+    // initial render
+    renderTasks();
+  </script>
 </body>
 </html>
